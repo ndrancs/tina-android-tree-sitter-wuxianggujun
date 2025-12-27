@@ -167,7 +167,7 @@ fun Project.configureTsModule() {
     ndkVersion = "29.0.14206865"
 
     defaultConfig {
-      val rootProjDir = project.rootProject.projectDir.absolutePath
+      val rootProjDir = project.rootProject.projectDir.invariantSeparatorsPath
       val tsDir = "${rootProjDir}/tree-sitter-lib"
 
       externalNativeBuild {

@@ -142,8 +142,12 @@ private fun TsGrammar.cmakeListsSrc(rootDir: File,
       "Source directory for grammar '$name' not found")
   }
 
+  // Use invariantSeparatorsPath to ensure forward slashes on Windows
+  val rootDirPath = rootDir.invariantSeparatorsPath
+  val grammarDirPath = grammarDir.invariantSeparatorsPath
+  
   val sources = srcExtra.joinToString(
-    separator = "\n        ") { "${grammarDir.absolutePath}/${it}" }
+    separator = "\n        ") { "\"${grammarDirPath}/${it}\"" }
   return """
 $CMAKE_LICENSE
 
@@ -152,17 +156,17 @@ cmake_minimum_required(VERSION 3.22.1)
 project("tree-sitter-$name")
 
 # Set the root project directory
-set(PROJECT_DIR ${rootDir.absolutePath})
+set(PROJECT_DIR "${rootDirPath}")
 
 # Include common configuration
-include(${rootDir.absolutePath}/cmake/common-config.cmake)
+include("${rootDirPath}/cmake/common-config.cmake")
 
 # This includes the header file for the parser
-include_directories(${grammarDir.absolutePath}/src)
+include_directories("${grammarDirPath}/src")
 
 # add tree-sitter-java library
 add_library(${'$'}{CMAKE_PROJECT_NAME} SHARED
-        ${grammarDir.absolutePath}/src/parser.c
+        "${grammarDirPath}/src/parser.c"
         $sources
         tree-sitter-${name}.cpp)
         
