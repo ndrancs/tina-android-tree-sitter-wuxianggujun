@@ -44,5 +44,21 @@
   {
     "name": "xml",
     "src.extra": []
+  },
+  {
+    "name": "bash",
+    "src.extra": [
+      "src/scanner.c"
+    ]
+  },
+  {
+    "name": "yaml",
+    "src.extra": [
+      "src/scanner.c"
+    ]
+  },
+  {
+    "name": "make",
+    "src.extra": []
   }
 ]
