@@ -60,5 +60,11 @@
   {
     "name": "make",
     "src.extra": []
+  },
+  {
+    "name": "cmake",
+    "src.extra": [
+      "src/scanner.c"
+    ]
   }
 ]
