@@ -40,3 +40,6 @@
 [submodule "grammars/make"]
 	path = grammars/make
 	url = https://github.com/tree-sitter-grammars/tree-sitter-make
+[submodule "grammars/cmake"]
+	path = grammars/cmake
+	url = https://github.com/uyha/tree-sitter-cmake.git
