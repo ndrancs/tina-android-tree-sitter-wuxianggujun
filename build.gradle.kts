@@ -38,6 +38,11 @@ buildscript {
   alias(libs.plugins.maven.publish) apply false
 }
 
+// Set default version if Nyx plugin is not applied (e.g., when used as a submodule)
+if (version == "unspecified") {
+  version = "v4.2.0-local"
+}
+
 fun Project.configureBaseExtension() {
   extensions.configure<BaseExtension> {
     compileSdkVersion(34)
