@@ -31,15 +31,3 @@
 [submodule "grammars/cpp"]
 	path = grammars/cpp
 	url = https://github.com/tree-sitter/tree-sitter-cpp
-[submodule "grammars/bash"]
-	path = grammars/bash
-	url = https://github.com/tree-sitter/tree-sitter-bash
-[submodule "grammars/yaml"]
-	path = grammars/yaml
-	url = https://github.com/tree-sitter-grammars/tree-sitter-yaml
-[submodule "grammars/make"]
-	path = grammars/make
-	url = https://github.com/tree-sitter-grammars/tree-sitter-make
-[submodule "grammars/cmake"]
-	path = grammars/cmake
-	url = https://github.com/uyha/tree-sitter-cmake.git
