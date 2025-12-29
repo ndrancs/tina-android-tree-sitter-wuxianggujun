@@ -18,10 +18,6 @@
     name: (identifier) @function))
 
 (function_declarator
-  declarator: (qualified_identifier
-    name: (identifier) @function))
-
-(function_declarator
   declarator: (field_identifier) @function)
 
 ; Types
@@ -35,6 +31,10 @@
 
 (this) @variable.builtin
 (null "nullptr" @constant)
+
+; Modules
+(module_name
+  (identifier) @module)
 
 ; Keywords
 
@@ -64,9 +64,12 @@
  "try"
  "typename"
  "using"
- "virtual"
  "concept"
  "requires"
+ "virtual"
+ "import"
+ "export"
+ "module"
 ] @keyword
 
 ; Strings

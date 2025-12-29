@@ -278,21 +278,37 @@ auto f = [&](int x) -> bool {
   return true;
 };
 
-auto g = [x, y](int z) {
+auto f = [x, y](int z) {
   return false;
 };
 
-auto h = [] {
+auto f = [] {
   return false;
 };
 
-auto i = [] <typename T> () {
+auto f = [] <typename T> () {
   return T();
 };
 
-auto i = [] <typename T> requires Hashable<T> {
+auto f = [] <typename T> requires Hashable<T> {
   return T();
 };
+
+auto f = [... args = std::forward<Args>(args)](auto &&func) mutable {
+  return std::invoke(std::forward<decltype(func)>(func), std::forward<Args>(args)...);
+};
+
+auto f = [&arg, &...etc = etc] {};
+
+auto f = [=, *this, &args...] {};
+
+auto f = [] -> int {};
+
+auto f = [s = S{}] mutable {};
+
+auto f = [] [[noreturn]] (int i) { throw 1; };
+
+auto f = [](int i) consteval static noexcept -> int { return i + 1; }(5);
 
 --------------------------------------------------------------------------------
 
@@ -305,7 +321,7 @@ auto i = [] <typename T> requires Hashable<T> {
       (lambda_expression
         (lambda_capture_specifier
           (lambda_default_capture))
-        (abstract_function_declarator
+        (lambda_declarator
           (parameter_list
             (parameter_declaration
               (primitive_type)
@@ -325,7 +341,7 @@ auto i = [] <typename T> requires Hashable<T> {
         (lambda_capture_specifier
           (identifier)
           (identifier))
-        (abstract_function_declarator
+        (lambda_declarator
           (parameter_list
             (parameter_declaration
               (primitive_type)
@@ -353,7 +369,7 @@ auto i = [] <typename T> requires Hashable<T> {
         (template_parameter_list
           (type_parameter_declaration
             (type_identifier)))
-        (abstract_function_declarator
+        (lambda_declarator
           (parameter_list))
         (compound_statement
           (return_statement
@@ -380,7 +396,158 @@ auto i = [] <typename T> requires Hashable<T> {
           (return_statement
             (call_expression
               (identifier)
-              (argument_list))))))))
+              (argument_list)))))))
+  (declaration
+    (placeholder_type_specifier
+      (auto))
+    (init_declarator
+      (identifier)
+      (lambda_expression
+        (lambda_capture_specifier
+          (lambda_capture_initializer
+            (identifier)
+            (call_expression
+              (qualified_identifier
+                (namespace_identifier)
+                (template_function
+                  (identifier)
+                  (template_argument_list
+                    (type_descriptor
+                      (type_identifier)))))
+              (argument_list
+                (identifier)))))
+        (lambda_declarator
+          (parameter_list
+            (parameter_declaration
+              (placeholder_type_specifier
+                (auto))
+              (reference_declarator
+                (identifier))))
+          (lambda_specifier))
+        (compound_statement
+          (return_statement
+            (call_expression
+              (qualified_identifier
+                (namespace_identifier)
+                (identifier))
+              (argument_list
+                (call_expression
+                  (qualified_identifier
+                    (namespace_identifier)
+                    (template_function
+                      (identifier)
+                      (template_argument_list
+                        (type_descriptor
+                          (decltype
+                            (identifier))))))
+                  (argument_list
+                    (identifier)))
+                (parameter_pack_expansion
+                  (call_expression
+                    (qualified_identifier
+                      (namespace_identifier)
+                      (template_function
+                        (identifier)
+                        (template_argument_list
+                          (type_descriptor
+                            (type_identifier)))))
+                    (argument_list
+                      (identifier)))))))))))
+  (declaration
+    (placeholder_type_specifier
+      (auto))
+    (init_declarator
+      (identifier)
+      (lambda_expression
+        (lambda_capture_specifier
+          (identifier)
+          (lambda_capture_initializer
+            (identifier)
+            (identifier)))
+        (compound_statement))))
+  (declaration
+    (placeholder_type_specifier
+      (auto))
+    (init_declarator
+      (identifier)
+      (lambda_expression
+        (lambda_capture_specifier
+          (lambda_default_capture)
+          (this)
+          (parameter_pack_expansion
+            (identifier)))
+        (compound_statement))))
+  (declaration
+    (placeholder_type_specifier
+      (auto))
+    (init_declarator
+      (identifier)
+      (lambda_expression
+        (lambda_capture_specifier)
+        (lambda_declarator
+          (trailing_return_type
+            (type_descriptor
+              (primitive_type))))
+        (compound_statement))))
+  (declaration
+    (placeholder_type_specifier
+      (auto))
+    (init_declarator
+      (identifier)
+      (lambda_expression
+        (lambda_capture_specifier
+          (lambda_capture_initializer
+            (identifier)
+            (compound_literal_expression
+              (type_identifier)
+              (initializer_list))))
+        (lambda_declarator
+          (lambda_specifier))
+        (compound_statement))))
+  (declaration
+    (placeholder_type_specifier
+      (auto))
+    (init_declarator
+      (identifier)
+      (lambda_expression
+        (lambda_capture_specifier)
+        (lambda_declarator
+          (attribute_declaration
+            (attribute
+              (identifier)))
+          (parameter_list
+            (parameter_declaration
+              (primitive_type)
+              (identifier))))
+        (compound_statement
+          (throw_statement
+                (number_literal))))))
+      (declaration
+        (placeholder_type_specifier
+          (auto))
+        (init_declarator
+          (identifier)
+          (call_expression
+            (lambda_expression
+              (lambda_capture_specifier)
+              (lambda_declarator
+                (parameter_list
+                  (parameter_declaration
+                    (primitive_type)
+                    (identifier)))
+                (lambda_specifier)
+                (lambda_specifier)
+                (noexcept)
+                (trailing_return_type
+                  (type_descriptor
+                    (primitive_type))))
+              (compound_statement
+                (return_statement
+                  (binary_expression
+                    (identifier)
+                    (number_literal)))))
+            (argument_list
+              (number_literal))))))
 
 ================================================================================
 Nested template calls
