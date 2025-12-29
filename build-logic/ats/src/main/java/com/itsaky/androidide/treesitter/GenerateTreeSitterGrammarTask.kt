@@ -20,6 +20,7 @@ package com.itsaky.androidide.treesitter
 import org.gradle.api.DefaultTask
 import org.gradle.api.logging.LogLevel.LIFECYCLE
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 
 /**
  * @author Akash Yadav
@@ -31,12 +32,24 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
     val langName = project.name.substringAfterLast('-')
 
     val grammarDir = project.rootProject.file("grammars/$langName").absolutePath
+    val grammarsDir = project.rootProject.file("grammars").absolutePath
     var tsCmd = project.rootProject.file("tree-sitter-lib/cli/build/release/tree-sitter").absolutePath
     if (!BUILD_TS_CLI_FROM_SOURCE) {
       tsCmd = "tree-sitter"
     }
 
+    // Set NODE_PATH to include the grammars directory so that tree-sitter-cpp can find tree-sitter-c
+    val env = mutableMapOf<String, String>()
+    val existingNodePath = System.getenv("NODE_PATH") ?: ""
+    val separator = if (File.separator == "\\") ";" else ":"
+    env["NODE_PATH"] = if (existingNodePath.isNotEmpty()) {
+      "$grammarsDir$separator$existingNodePath"
+    } else {
+      grammarsDir
+    }
+
     project.logger.log(LIFECYCLE, "Using '$tsCmd' to generate '${project.name}' grammar")
-    project.executeCommand(grammarDir, tsCmd, "generate")
+    project.logger.log(LIFECYCLE, "NODE_PATH set to: ${env["NODE_PATH"]}")
+    project.executeCommand(grammarDir, env, tsCmd, "generate")
   }
 }

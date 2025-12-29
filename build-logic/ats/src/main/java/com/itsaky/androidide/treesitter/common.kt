@@ -33,11 +33,18 @@ val BUILD_TS_CLI_FROM_SOURCE by lazy {
 }
 
 fun Project.executeCommand(workingDir: String, vararg command: String) {
+  executeCommand(workingDir, emptyMap(), *command)
+}
+
+fun Project.executeCommand(workingDir: String, env: Map<String, String>, vararg command: String) {
   val result = exec {
     workingDir(workingDir)
     commandLine(*command)
     standardOutput = System.out
     errorOutput = System.err
+    if (env.isNotEmpty()) {
+      environment(env)
+    }
   }
 
   if (result.exitValue != 0) {
