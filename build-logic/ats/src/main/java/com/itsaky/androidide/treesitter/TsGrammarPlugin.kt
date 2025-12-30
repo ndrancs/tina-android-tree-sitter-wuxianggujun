@@ -44,6 +44,7 @@ class TsGrammarPlugin : Plugin<Project> {
         dependsOn(rootProject.tasks.getByName("buildTreeSitter"))
 
         inputs.file(grammarDir.file("grammar.js"))
+        inputs.file(grammarDir.file("package.json"))
         for (extra in srcExtra) {
           inputs.file(grammarDir.file(extra))
         }

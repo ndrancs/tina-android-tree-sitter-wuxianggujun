@@ -32,6 +32,22 @@
     "src/**",
     "*.wasm"
   ],
+  "tree-sitter": [
+    {
+      "scope": "source.cpp",
+      "file-types": [
+        "cc",
+        "cpp",
+        "cxx",
+        "hpp",
+        "hxx",
+        "h"
+      ],
+      "highlights": [
+        "queries/highlights.scm"
+      ]
+    }
+  ],
   "dependencies": {
     "node-addon-api": "^8.2.1",
     "node-gyp-build": "^4.8.2",
@@ -56,6 +72,7 @@
     "lint": "eslint grammar.js",
     "prestart": "tree-sitter build --wasm",
     "start": "tree-sitter playground",
-    "test": "node --test bindings/node/*_test.js"
+    "test": "node --test bindings/node/*_test.js",
+    "prebuildify": "prebuildify --napi --strip"
   }
 }
