@@ -101,3 +101,6 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+
+# Tree-sitter CLI build artifacts
+tree-sitter-lib/cli/build/
