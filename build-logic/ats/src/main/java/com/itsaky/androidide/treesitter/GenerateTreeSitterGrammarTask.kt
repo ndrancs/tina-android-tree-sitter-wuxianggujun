@@ -67,11 +67,12 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
 
   private fun ensureTreeSitterPackageJson(grammarDir: File, langName: String): (() -> Unit)? {
     val packageJson = File(grammarDir, "package.json")
-    val treeSitterMarker = "\"tree-sitter\""
+    // Match a JSON key, not a random string value like keywords: ["tree-sitter"]
+    val treeSitterKeyRegex = Regex("\"tree-sitter\"\\s*:")
 
     if (packageJson.exists()) {
       val original = packageJson.readText()
-      if (original.contains(treeSitterMarker)) {
+      if (treeSitterKeyRegex.containsMatchIn(original)) {
         return null
       }
 
