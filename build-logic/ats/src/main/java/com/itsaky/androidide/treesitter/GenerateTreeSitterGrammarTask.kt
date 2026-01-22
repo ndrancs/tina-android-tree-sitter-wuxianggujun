@@ -30,7 +30,6 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
 
   @TaskAction
   fun generateGrammar() {
-    project.logger.log(LIFECYCLE, "GenerateTreeSitterGrammarTask: patched shim enabled")
     val langName = project.name.substringAfterLast('-')
 
     val grammarDirFile = project.rootProject.file("grammars/$langName")
@@ -68,12 +67,10 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
 
   private fun ensureTreeSitterPackageJson(grammarDir: File, langName: String): (() -> Unit)? {
     val packageJson = File(grammarDir, "package.json")
-    // Match a JSON key, not a random string value like keywords: ["tree-sitter"]
-    val treeSitterKeyRegex = Regex("\"tree-sitter\"\\s*:")
 
     if (packageJson.exists()) {
       val original = packageJson.readText()
-      if (treeSitterKeyRegex.containsMatchIn(original)) {
+      if (containsTopLevelJsonKey(original, "tree-sitter")) {
         return null
       }
 
@@ -103,6 +100,72 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
     project.logger.log(LIFECYCLE, "Creating temporary package.json with 'tree-sitter' section: ${packageJson.absolutePath}")
     packageJson.writeText(minimal)
     return { Files.deleteIfExists(packageJson.toPath()) }
+  }
+
+  private fun containsTopLevelJsonKey(json: String, key: String): Boolean {
+    var curlyDepth = 0
+    var i = 0
+
+    while (i < json.length) {
+      val c = json[i]
+      when (c) {
+        '{' -> {
+          curlyDepth++
+          i++
+        }
+
+        '}' -> {
+          curlyDepth--
+          i++
+        }
+
+        '"' -> {
+          val (stringValue, endIndex) = readJsonString(json, i)
+          if (curlyDepth == 1 && stringValue == key) {
+            var j = endIndex + 1
+            while (j < json.length && json[j].isWhitespace()) j++
+            if (j < json.length && json[j] == ':') return true
+          }
+          i = endIndex + 1
+        }
+
+        else -> i++
+      }
+    }
+
+    return false
+  }
+
+  private fun readJsonString(json: String, startQuoteIndex: Int): Pair<String, Int> {
+    val sb = StringBuilder()
+    var i = startQuoteIndex + 1
+    var escaped = false
+
+    while (i < json.length) {
+      val c = json[i]
+      if (escaped) {
+        sb.append(c)
+        escaped = false
+        i++
+        continue
+      }
+
+      when (c) {
+        '\\' -> {
+          escaped = true
+          i++
+        }
+
+        '"' -> return sb.toString() to i
+
+        else -> {
+          sb.append(c)
+          i++
+        }
+      }
+    }
+
+    return sb.toString() to (json.length - 1)
   }
 
   private fun injectTreeSitterSection(originalJson: String, langName: String): String {
