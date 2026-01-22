@@ -21,6 +21,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.logging.LogLevel.LIFECYCLE
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.nio.file.Files
 
 /**
  * @author Akash Yadav
@@ -31,7 +32,14 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
   fun generateGrammar() {
     val langName = project.name.substringAfterLast('-')
 
-    val grammarDir = project.rootProject.file("grammars/$langName").absolutePath
+    val grammarDirFile = project.rootProject.file("grammars/$langName")
+
+    // tree-sitter-cli <= 0.20 expects a "tree-sitter" section in package.json.
+    // Some upstream grammars (e.g. newer tree-sitter-rust) ship "tree-sitter.json" instead.
+    // To keep submodules untouched, we patch package.json temporarily for generation.
+    val restorePackageJson = ensureTreeSitterPackageJson(grammarDirFile, langName)
+
+    val grammarDir = grammarDirFile.absolutePath
     val grammarsDir = project.rootProject.file("grammars").absolutePath
     var tsCmd = project.rootProject.file("tree-sitter-lib/cli/build/release/tree-sitter").absolutePath
     if (!BUILD_TS_CLI_FROM_SOURCE) {
@@ -48,8 +56,81 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
       grammarsDir
     }
 
-    project.logger.log(LIFECYCLE, "Using '$tsCmd' to generate '${project.name}' grammar")
-    project.logger.log(LIFECYCLE, "NODE_PATH set to: ${env["NODE_PATH"]}")
-    project.executeCommand(grammarDir, env, tsCmd, "generate")
+    try {
+      project.logger.log(LIFECYCLE, "Using '$tsCmd' to generate '${project.name}' grammar")
+      project.logger.log(LIFECYCLE, "NODE_PATH set to: ${env["NODE_PATH"]}")
+      project.executeCommand(grammarDir, env, tsCmd, "generate")
+    } finally {
+      restorePackageJson?.invoke()
+    }
+  }
+
+  private fun ensureTreeSitterPackageJson(grammarDir: File, langName: String): (() -> Unit)? {
+    val packageJson = File(grammarDir, "package.json")
+    val treeSitterMarker = "\"tree-sitter\""
+
+    if (packageJson.exists()) {
+      val original = packageJson.readText()
+      if (original.contains(treeSitterMarker)) {
+        return null
+      }
+
+      val patched = injectTreeSitterSection(original, langName)
+      packageJson.writeText(patched)
+      return { packageJson.writeText(original) }
+    }
+
+    // No package.json: create a minimal one for legacy CLI
+    val minimal = """
+      {
+        "name": "tree-sitter-$langName",
+        "version": "0.0.0",
+        "private": true,
+        "tree-sitter": [
+          {
+            "scope": "source.$langName",
+            "file-types": ["$langName"],
+            "highlights": ["queries/highlights.scm"]
+          }
+        ]
+      }
+    """.trimIndent() + "\n"
+
+    packageJson.parentFile?.mkdirs()
+    packageJson.writeText(minimal)
+    return { Files.deleteIfExists(packageJson.toPath()) }
+  }
+
+  private fun injectTreeSitterSection(originalJson: String, langName: String): String {
+    val injection = """
+      "tree-sitter": [
+        {
+          "scope": "source.$langName",
+          "file-types": ["$langName"],
+          "highlights": ["queries/highlights.scm"]
+        }
+      ]
+    """.trimIndent()
+
+    val end = originalJson.lastIndexOf('}')
+    if (end <= 0) {
+      return originalJson
+    }
+
+    val prefix = originalJson.substring(0, end)
+    val suffix = originalJson.substring(end)
+
+    val trimmedPrefix = prefix.trimEnd()
+    val needsComma = trimmedPrefix.isNotEmpty() && trimmedPrefix.last() != '{' && trimmedPrefix.last() != ','
+
+    val builder = StringBuilder()
+    builder.append(trimmedPrefix)
+    if (needsComma) builder.append(',')
+    builder.append('\n')
+    builder.append("  ")
+    builder.append(injection.replace("\n", "\n  "))
+    builder.append('\n')
+    builder.append(suffix)
+    return builder.toString()
   }
 }
