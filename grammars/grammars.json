@@ -66,5 +66,17 @@
     "src.extra": [
       "src/scanner.c"
     ]
+  },
+  {
+    "name": "rust",
+    "src.extra": [
+      "src/scanner.c"
+    ]
+  },
+  {
+    "name": "toml",
+    "src.extra": [
+      "src/scanner.c"
+    ]
   }
 ]
