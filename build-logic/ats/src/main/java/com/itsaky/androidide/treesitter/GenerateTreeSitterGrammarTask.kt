@@ -30,6 +30,7 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
 
   @TaskAction
   fun generateGrammar() {
+    project.logger.log(LIFECYCLE, "GenerateTreeSitterGrammarTask: patched shim enabled")
     val langName = project.name.substringAfterLast('-')
 
     val grammarDirFile = project.rootProject.file("grammars/$langName")
