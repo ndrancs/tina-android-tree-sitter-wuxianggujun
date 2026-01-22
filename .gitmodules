@@ -22,3 +22,9 @@
 [submodule "grammars/properties"]
 	path = grammars/properties
 	url = https://github.com/AndroidIDEOfficial/tree-sitter-properties
+[submodule "grammars/rust"]
+	path = grammars/rust
+	url = https://github.com/tree-sitter/tree-sitter-rust.git
+[submodule "grammars/toml"]
+	path = grammars/toml
+	url = https://github.com/tree-sitter/tree-sitter-toml.git
