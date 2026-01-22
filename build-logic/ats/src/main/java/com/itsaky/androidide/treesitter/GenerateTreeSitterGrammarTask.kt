@@ -76,6 +76,7 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
         return null
       }
 
+      project.logger.log(LIFECYCLE, "Patching package.json to add 'tree-sitter' section: ${packageJson.absolutePath}")
       val patched = injectTreeSitterSection(original, langName)
       packageJson.writeText(patched)
       return { packageJson.writeText(original) }
@@ -98,6 +99,7 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
     """.trimIndent() + "\n"
 
     packageJson.parentFile?.mkdirs()
+    project.logger.log(LIFECYCLE, "Creating temporary package.json with 'tree-sitter' section: ${packageJson.absolutePath}")
     packageJson.writeText(minimal)
     return { Files.deleteIfExists(packageJson.toPath()) }
   }
