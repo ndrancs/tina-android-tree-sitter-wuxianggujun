@@ -20,13 +20,17 @@ package com.itsaky.androidide.treesitter
 import org.gradle.api.DefaultTask
 import org.gradle.api.logging.LogLevel.LIFECYCLE
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 import java.io.File
 import java.nio.file.Files
+import javax.inject.Inject
 
 /**
  * @author Akash Yadav
  */
-abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
+abstract class GenerateTreeSitterGrammarTask @Inject constructor(
+  private val execOperations: ExecOperations
+) : DefaultTask() {
 
   @TaskAction
   fun generateGrammar() {
@@ -59,7 +63,7 @@ abstract class GenerateTreeSitterGrammarTask : DefaultTask() {
     try {
       project.logger.log(LIFECYCLE, "Using '$tsCmd' to generate '${project.name}' grammar")
       project.logger.log(LIFECYCLE, "NODE_PATH set to: ${env["NODE_PATH"]}")
-      project.executeCommand(grammarDir, env, tsCmd, "generate")
+      execOperations.executeCommand(grammarDir, env, tsCmd, "generate")
     } finally {
       restorePackageJson?.invoke()
     }

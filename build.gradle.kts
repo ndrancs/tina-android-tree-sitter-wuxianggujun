@@ -89,7 +89,7 @@ subprojects {
     // set java library path for tests
     tasks.withType<Test> {
       systemProperty("java.library.path",
-        rootProject.buildDir.resolve("host").absolutePath)
+        rootProject.layout.buildDirectory.dir("host").get().asFile.absolutePath)
     }
   }
 

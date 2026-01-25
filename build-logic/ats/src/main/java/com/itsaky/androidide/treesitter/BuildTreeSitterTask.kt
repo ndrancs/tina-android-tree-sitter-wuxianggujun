@@ -20,13 +20,17 @@ package com.itsaky.androidide.treesitter
 import java.io.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
 
 /**
  * Task for building the tree-sitter lib.
  *
  * @author Akash Yadav
  */
-abstract class BuildTreeSitterTask : DefaultTask() {
+abstract class BuildTreeSitterTask @Inject constructor(
+  private val execOperations: ExecOperations
+) : DefaultTask() {
 
   @TaskAction
   fun buildTsCli() {
@@ -44,6 +48,6 @@ abstract class BuildTreeSitterTask : DefaultTask() {
     project.logger.info(
       "Building tree-sitter-cli with command ${cmd.joinToString(separator = " ")}")
 
-    project.executeCommand(cliDir.absolutePath, command = cmd)
+    execOperations.executeCommand(cliDir.absolutePath, command = cmd)
   }
 }

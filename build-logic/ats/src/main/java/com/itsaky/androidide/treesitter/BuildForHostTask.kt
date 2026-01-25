@@ -26,14 +26,18 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 import java.io.File
+import javax.inject.Inject
 
 /**
  * Gradle task to build shared library for host OS.
  *
  * @author Akash Yadav
  */
-abstract class BuildForHostTask : DefaultTask() {
+abstract class BuildForHostTask @Inject constructor(
+  private val execOperations: ExecOperations
+) : DefaultTask() {
 
   @get:InputFiles
   abstract val cppDir: DirectoryProperty
@@ -54,8 +58,8 @@ abstract class BuildForHostTask : DefaultTask() {
       project.layout.buildDirectory.dir("generated/native_headers")
         .get().asFile.absolutePath
 
-    project.executeCommand(workingDir, "cmake", cppDir.absolutePath, "-DAUTOGEN_HEADERS=$nativeHeaderDirPath")
-    project.executeCommand(workingDir, "make")
+    execOperations.executeCommand(workingDir, "cmake", cppDir.absolutePath, "-DAUTOGEN_HEADERS=$nativeHeaderDirPath")
+    execOperations.executeCommand(workingDir, "make")
 
     if (project.name.isEmpty()) {
       throw GradleException(

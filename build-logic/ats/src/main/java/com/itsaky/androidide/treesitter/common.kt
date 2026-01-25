@@ -20,7 +20,9 @@ package com.itsaky.androidide.treesitter
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.provideDelegate
+import org.gradle.process.ExecOperations
 import java.io.ByteArrayOutputStream
+import javax.inject.Inject
 
 /**
  * @author Akash Yadav
@@ -32,11 +34,11 @@ val BUILD_TS_CLI_FROM_SOURCE by lazy {
   System.getenv(ENV_TS_CLI_BUILD_FROM_SOURCE)?.toBoolean() ?: true
 }
 
-fun Project.executeCommand(workingDir: String, vararg command: String) {
+fun ExecOperations.executeCommand(workingDir: String, vararg command: String) {
   executeCommand(workingDir, emptyMap(), *command)
 }
 
-fun Project.executeCommand(workingDir: String, env: Map<String, String>, vararg command: String) {
+fun ExecOperations.executeCommand(workingDir: String, env: Map<String, String>, vararg command: String) {
   val result = exec {
     workingDir(workingDir)
     commandLine(*command)

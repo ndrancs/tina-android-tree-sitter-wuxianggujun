@@ -27,13 +27,17 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 import java.io.ByteArrayOutputStream
 import java.io.File
+import javax.inject.Inject
 
 /**
  * @author Akash Yadav
  */
-abstract class GenerateDebugSymbolsTask : DefaultTask() {
+abstract class GenerateDebugSymbolsTask @Inject constructor(
+  private val execOperations: ExecOperations
+) : DefaultTask() {
 
   /**
    * The input directory which contains the unstripped native libraries.
@@ -86,7 +90,7 @@ abstract class GenerateDebugSymbolsTask : DefaultTask() {
     project.logger.info("Executing cmd: ${cmdLine.joinToString(separator = " ")}")
 
     val output = ByteArrayOutputStream()
-    val result = project.exec {
+    val result = execOperations.exec {
       commandLine(*cmdLine)
       standardOutput = output
       errorOutput = standardOutput
