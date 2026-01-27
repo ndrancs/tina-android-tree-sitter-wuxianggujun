@@ -41,7 +41,9 @@ class TsGrammarPlugin : Plugin<Project> {
       val generateTask = tasks.register("generateTreeSitterGrammar",
         GenerateTreeSitterGrammarTask::class.java) {
 
-        dependsOn(rootProject.tasks.getByName("buildTreeSitter"))
+        if (BUILD_TS_CLI_FROM_SOURCE) {
+          dependsOn(rootProject.tasks.getByName("buildTreeSitter"))
+        }
 
         inputs.file(grammarDir.file("grammar.js"))
         inputs.file(grammarDir.file("package.json"))

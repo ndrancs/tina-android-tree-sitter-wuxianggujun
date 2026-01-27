@@ -31,7 +31,9 @@ import javax.inject.Inject
 const val ENV_TS_CLI_BUILD_FROM_SOURCE = "TS_CLI_BUILD_FROM_SOURCE"
 
 val BUILD_TS_CLI_FROM_SOURCE by lazy {
-  System.getenv(ENV_TS_CLI_BUILD_FROM_SOURCE)?.toBoolean() ?: true
+  // Default to false to avoid forcing Rust toolchain/cargo in downstream consumers.
+  // Opt-in by setting TS_CLI_BUILD_FROM_SOURCE=true.
+  System.getenv(ENV_TS_CLI_BUILD_FROM_SOURCE)?.toBoolean() ?: false
 }
 
 fun ExecOperations.executeCommand(workingDir: String, vararg command: String) {
