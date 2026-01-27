@@ -1,0 +1,41 @@
+==================
+Key value with eq separator
+==================
+
+key=value
+
+------------------
+
+(properties
+  (property
+    key: (property_name)
+    separator: (sep)
+    value: (property_value)))
+
+==================
+Key value with colon separator
+==================
+
+key:value
+
+------------------
+
+(properties
+  (property
+    key: (property_name)
+    separator: (sep)
+    value: (property_value)))
+
+==================
+Key value with separator in value
+==================
+
+key=value=value
+
+------------------
+
+(properties
+  (property
+    key: (property_name)
+    separator: (sep)
+    value: (property_value)))
