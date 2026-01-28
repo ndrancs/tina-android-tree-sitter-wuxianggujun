@@ -38,6 +38,11 @@ class TsGrammarPlugin : Plugin<Project> {
       val grammarDir = objects.directoryProperty()
       grammarDir.set(rootProject.rootDir.resolve("grammars/$grammarName"))
 
+      val forceGenerate = providers
+        .gradleProperty("androidTreeSitter.forceGenerateGrammars")
+        .map { it.equals("true", ignoreCase = true) }
+        .orElse(false)
+
       val generateTask = tasks.register("generateTreeSitterGrammar",
         GenerateTreeSitterGrammarTask::class.java) {
 
@@ -52,6 +57,23 @@ class TsGrammarPlugin : Plugin<Project> {
         }
 
         outputs.file(grammarDir.file("src/parser.c"))
+        outputs.file(grammarDir.file("src/grammar.json"))
+        outputs.file(grammarDir.file("src/node-types.json"))
+
+        // 在 CI / 全新 checkout 场景下，我们通常已经提交了生成产物（parser.c 等）。
+        // Gradle 首次构建没有历史快照时会强制执行该任务，导致缺少 `tree-sitter` CLI 的环境直接失败。
+        // 因此：默认仅在产物缺失时才生成；需要强制生成可传入：
+        //   -PandroidTreeSitter.forceGenerateGrammars=true
+        onlyIf {
+          if (forceGenerate.get()) {
+            return@onlyIf true
+          }
+
+          val parserC = grammarDir.file("src/parser.c").get().asFile
+          val grammarJson = grammarDir.file("src/grammar.json").get().asFile
+          val nodeTypes = grammarDir.file("src/node-types.json").get().asFile
+          !(parserC.exists() && grammarJson.exists() && nodeTypes.exists())
+        }
       }
       tasks.withType(JavaCompile::class.java) { dependsOn(generateTask) }
     }
