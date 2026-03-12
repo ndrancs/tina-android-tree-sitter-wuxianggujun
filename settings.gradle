@@ -18,6 +18,19 @@
 pluginManagement {
     includeBuild("build-logic")
     repositories {
+        // 主工程运行在 Windows/国内网络环境时，插件仓库优先走镜像，避免 TLS 握手失败。
+        maven {
+            url = uri("https://maven.aliyun.com/repository/google")
+            name = "AliyunGoogleMirror"
+        }
+        maven {
+            url = uri("https://maven.aliyun.com/repository/public")
+            name = "AliyunPublicMirror"
+        }
+        maven {
+            url = uri("https://maven.aliyun.com/repository/gradle-plugin")
+            name = "AliyunGradlePluginMirror"
+        }
         gradlePluginPortal()
         google()
         mavenCentral()
@@ -59,6 +72,15 @@ if (!skipNyx) {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        // 依赖解析同样优先走镜像，避免 Maven Central 在当前环境下握手失败。
+        maven {
+            url = uri("https://maven.aliyun.com/repository/google")
+            name = "AliyunGoogleMirror"
+        }
+        maven {
+            url = uri("https://maven.aliyun.com/repository/public")
+            name = "AliyunPublicMirror"
+        }
         google()
         mavenCentral()
     }
