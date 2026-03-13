@@ -43,15 +43,62 @@ if (version == "unspecified") {
   version = "v4.2.0-local"
 }
 
+fun Project.parseBooleanGradleProperty(name: String, default: Boolean): Boolean {
+  val raw = providers.gradleProperty(name).orNull?.trim() ?: return default
+  return when {
+    raw.equals("true", ignoreCase = true) || raw == "1" -> true
+    raw.equals("false", ignoreCase = true) || raw == "0" -> false
+    else -> throw GradleException("Invalid boolean gradle property '$name=$raw'. Expected true/false.")
+  }
+}
+
+val requestedTaskNames = gradle.startParameter.taskNames
+val devAbiMapping = mapOf("arm64" to "arm64-v8a", "x86_64" to "x86_64")
+val localDevAbi = providers.gradleProperty("tina.devAbi").orNull?.trim().orEmpty().ifBlank { "arm64" }
+require(localDevAbi in devAbiMapping) {
+  "Unsupported -Ptina.devAbi=$localDevAbi. Expected one of ${devAbiMapping.keys}."
+}
+val buildAllAbiRequested =
+  parseBooleanGradleProperty("tina.allAbi", default = false) ||
+    (System.getenv("CI")?.equals("true", ignoreCase = true) == true) ||
+    requestedTaskNames.any { it.contains("AllAbi", ignoreCase = true) }
+val localReleaseLikeTaskRequested =
+  buildAllAbiRequested ||
+    requestedTaskNames.any {
+      it.contains("release", ignoreCase = true) ||
+        it.contains("publish", ignoreCase = true) ||
+        it.contains("sign", ignoreCase = true)
+    }
+val configuredNativeAbis =
+  if (buildAllAbiRequested) {
+    listOf("arm64-v8a", "x86_64", "armeabi-v7a", "x86")
+  } else {
+    listOf(devAbiMapping.getValue(localDevAbi))
+  }
+
 fun Project.configureBaseExtension() {
   extensions.configure<BaseExtension> {
     compileSdkVersion(34)
+
+    variantFilter {
+      if (
+        !localReleaseLikeTaskRequested &&
+        !project.pluginManager.hasPlugin("com.vanniktech.maven.publish.base") &&
+        buildType.name == "release"
+      ) {
+        ignore = true
+      }
+    }
 
     defaultConfig {
       minSdk = 21
       targetSdk = 33
       versionCode = project.projectVersionCode
       versionName = rootProject.version.toString()
+
+      ndk {
+        abiFilters += configuredNativeAbis
+      }
     }
 
     compileOptions {
