@@ -25,6 +25,11 @@ import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.JavaLibrary
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import java.nio.file.FileSystemException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.Comparator
+import java.io.File
 
 buildscript {
   dependencies {
@@ -53,6 +58,17 @@ fun Project.parseBooleanGradleProperty(name: String, default: Boolean): Boolean 
 }
 
 val requestedTaskNames = gradle.startParameter.taskNames
+val isWindowsHost = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
+val windowsBuildRoot: File? =
+  if (isWindowsHost) {
+    val baseDir =
+      System.getenv("LOCALAPPDATA")
+        ?.takeIf { it.isNotBlank() }
+        ?: System.getProperty("java.io.tmpdir")
+    File(baseDir, "TinaIDE/gradle-out/tina-android-tree-sitter")
+  } else {
+    null
+  }
 val devAbiMapping = mapOf("arm64" to "arm64-v8a", "x86_64" to "x86_64")
 val localDevAbi = providers.gradleProperty("tina.devAbi").orNull?.trim().orEmpty().ifBlank { "arm64" }
 require(localDevAbi in devAbiMapping) {
@@ -75,6 +91,48 @@ val configuredNativeAbis =
   } else {
     listOf(devAbiMapping.getValue(localDevAbi))
   }
+
+fun Project.deleteRecursivelyWithRetry(
+  path: Path,
+  description: String,
+  maxAttempts: Int = 12,
+  delayMs: Long = 500L,
+) {
+  if (!Files.exists(path)) {
+    return
+  }
+
+  var lastError: FileSystemException? = null
+  repeat(maxAttempts) { attempt ->
+    try {
+      Files.walk(path).use { stream ->
+        stream.sorted(Comparator.reverseOrder()).forEach { current ->
+          Files.deleteIfExists(current)
+        }
+      }
+      return
+    } catch (error: FileSystemException) {
+      lastError = error
+      logger.warn(
+        "Windows file lock while deleting ${description} (attempt ${attempt + 1}/$maxAttempts): ${error.message}")
+      Thread.sleep(delayMs)
+    }
+  }
+
+  throw GradleException(
+    buildString {
+      append("Failed to delete stale output for ")
+      append(description)
+      append(" after ")
+      append(maxAttempts)
+      append(" attempts. Another program is still using: ")
+      append(path.toAbsolutePath())
+      appendLine()
+      append("Close Explorer preview, jar viewers, antivirus scanners, or parallel Gradle/IDE builds and retry.")
+    },
+    lastError,
+  )
+}
 
 fun Project.configureBaseExtension() {
   extensions.configure<BaseExtension> {
@@ -122,8 +180,40 @@ fun Project.configureBaseExtension() {
 }
 
 subprojects {
+  if (isWindowsHost) {
+    val relativeBuildPath = project.path.removePrefix(":").replace(':', File.separatorChar)
+    layout.buildDirectory.set(
+      windowsBuildRoot!!
+        .resolve(relativeBuildPath.ifBlank { "root" })
+    )
+  }
+
   plugins.withId("com.android.application") { configureBaseExtension() }
-  plugins.withId("com.android.library") { configureBaseExtension() }
+  plugins.withId("com.android.library") {
+    configureBaseExtension()
+
+    if (isWindowsHost) {
+      // Windows 上 classes.jar 常被索引器/杀毒/并发 Gradle 进程短暂占用。
+      // 在 AGP 执行非增量清理前预删旧输出，降低 bundleLibCompileToJar* 的文件锁失败概率。
+      tasks.matching { it.name.startsWith("bundleLibCompileToJar") }.configureEach {
+        val bundleTaskName = name
+        val variantName =
+          bundleTaskName.removePrefix("bundleLibCompileToJar").replaceFirstChar { it.lowercase() }
+        doFirst {
+          val outputDir =
+            layout.buildDirectory
+              .dir("intermediates/compile_library_classes_jar/$variantName/$bundleTaskName")
+              .get()
+              .asFile
+              .toPath()
+          project.deleteRecursivelyWithRetry(
+            path = outputDir,
+            description = "${project.path}:$bundleTaskName output directory",
+          )
+        }
+      }
+    }
+  }
   plugins.withId("java-library") {
     tasks.withType(JavaCompile::class.java) {
       sourceCompatibility = BuildConfig.JAVA_VERSION.majorVersion
