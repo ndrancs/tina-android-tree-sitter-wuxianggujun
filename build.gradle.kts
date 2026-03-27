@@ -59,13 +59,17 @@ fun Project.parseBooleanGradleProperty(name: String, default: Boolean): Boolean 
 
 val requestedTaskNames = gradle.startParameter.taskNames
 val isWindowsHost = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
+val windowsBuildSessionId =
+  System.getProperty("tina.windowsBuildSession")
+    ?.takeIf { it.isNotBlank() }
+    ?: System.currentTimeMillis().toString()
 val windowsBuildRoot: File? =
   if (isWindowsHost) {
     val baseDir =
       System.getenv("LOCALAPPDATA")
         ?.takeIf { it.isNotBlank() }
         ?: System.getProperty("java.io.tmpdir")
-    File(baseDir, "TinaIDE/gradle-out/tina-android-tree-sitter")
+    File(baseDir, "TinaIDE/gradle-out/tina-android-tree-sitter/$windowsBuildSessionId")
   } else {
     null
   }
