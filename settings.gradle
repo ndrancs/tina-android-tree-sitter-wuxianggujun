@@ -17,7 +17,13 @@
 
 pluginManagement {
     includeBuild("build-logic")
+    def preferOfficialRepositories = System.getenv("CI") == "true"
     repositories {
+        if (preferOfficialRepositories) {
+            gradlePluginPortal()
+            google()
+            mavenCentral()
+        }
         // 主工程运行在 Windows/国内网络环境时，插件仓库优先走镜像，避免 TLS 握手失败。
         maven {
             url = uri("https://maven.aliyun.com/repository/google")
@@ -31,9 +37,11 @@ pluginManagement {
             url = uri("https://maven.aliyun.com/repository/gradle-plugin")
             name = "AliyunGradlePluginMirror"
         }
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+        if (!preferOfficialRepositories) {
+            gradlePluginPortal()
+            google()
+            mavenCentral()
+        }
     }
 }
 
@@ -71,7 +79,12 @@ if (!skipNyx) {
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    def preferOfficialRepositories = System.getenv("CI") == "true"
     repositories {
+        if (preferOfficialRepositories) {
+            google()
+            mavenCentral()
+        }
         // 依赖解析同样优先走镜像，避免 Maven Central 在当前环境下握手失败。
         maven {
             url = uri("https://maven.aliyun.com/repository/google")
@@ -81,8 +94,10 @@ dependencyResolutionManagement {
             url = uri("https://maven.aliyun.com/repository/public")
             name = "AliyunPublicMirror"
         }
-        google()
-        mavenCentral()
+        if (!preferOfficialRepositories) {
+            google()
+            mavenCentral()
+        }
     }
 }
 
