@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 /*
  *  This file is part of android-tree-sitter.
@@ -42,6 +43,20 @@ gradlePlugin {
 }
 
 repositories {
+    maven("https://maven.aliyun.com/repository/google") {
+        name = "AliyunGoogleMirror"
+        content {
+            includeGroupByRegex("com\\.android.*")
+            includeGroupByRegex("com\\.google.*")
+            includeGroupByRegex("androidx.*")
+        }
+    }
+    maven("https://maven.aliyun.com/repository/public") {
+        name = "AliyunPublicMirror"
+    }
+    maven("https://maven.aliyun.com/repository/gradle-plugin") {
+        name = "AliyunGradlePluginMirror"
+    }
     google()
     gradlePluginPortal()
     mavenCentral()
@@ -52,9 +67,9 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "17"
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
