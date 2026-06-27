@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
  */
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 val androidExtension = extensions.getByType(ApplicationExtension::class.java)
@@ -72,15 +71,15 @@ dependencies {
     implementation(libs.common.kotlin.coroutines.android)
     implementation(libs.google.material)
 
-    implementation(projects.androidTreeSitter)
-    implementation(projects.treeSitterC)
-    implementation(projects.treeSitterCpp)
-    implementation(projects.treeSitterJava)
-    implementation(projects.treeSitterJson)
-    implementation(projects.treeSitterKotlin)
-    implementation(projects.treeSitterLog)
-    implementation(projects.treeSitterPython)
-    implementation(projects.treeSitterXml)
+    implementation(project(":android-tree-sitter"))
+    implementation(project(":tree-sitter-c"))
+    implementation(project(":tree-sitter-cpp"))
+    implementation(project(":tree-sitter-java"))
+    implementation(project(":tree-sitter-json"))
+    implementation(project(":tree-sitter-kotlin"))
+    implementation(project(":tree-sitter-log"))
+    implementation(project(":tree-sitter-python"))
+    implementation(project(":tree-sitter-xml"))
 
     testImplementation(libs.tests.junit)
     androidTestImplementation(libs.tests.androidx.ext.junit)

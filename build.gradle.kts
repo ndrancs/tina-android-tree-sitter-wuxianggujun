@@ -29,7 +29,6 @@ import java.io.File
 
 @Suppress("DSL_SCOPE_VIOLATION") plugins {
   id("build-logic.root-project")
-  id("org.jetbrains.kotlin.android") apply false
   alias(libs.plugins.maven.publish) apply false
 }
 
@@ -235,8 +234,8 @@ fun Project.configureTsModule() {
   }
 
   // avoid circular dependency
-  if (project.projects.androidTreeSitter.name != project.name) {
+  if (project.path != ":android-tree-sitter") {
     configurations.getByName("api").dependencies.add(
-      project.projects.androidTreeSitter)
+      project.dependencies.project(":android-tree-sitter"))
   }
 }

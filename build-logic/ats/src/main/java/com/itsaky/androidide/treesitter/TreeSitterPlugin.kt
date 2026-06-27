@@ -19,7 +19,7 @@ package com.itsaky.androidide.treesitter
 
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.BaseExtension
+import com.android.build.api.dsl.LibraryExtension
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.itsaky.androidide.treesitter.jni.GenerateNativeHeadersTask
 import org.gradle.api.Plugin
@@ -38,14 +38,14 @@ class TreeSitterPlugin : Plugin<Project> {
       val nativeHeadersDir =
         project.layout.buildDirectory.dir("generated/native_headers")
 
-      val baseExtention = extensions.getByType(BaseExtension::class.java)
+      val libraryExtension = extensions.getByType(LibraryExtension::class.java)
 
-      baseExtention.defaultConfig.externalNativeBuild.cmake.arguments(
+      libraryExtension.defaultConfig.externalNativeBuild.cmake.arguments(
         "-DAUTOGEN_HEADERS=${nativeHeadersDir.get().asFile.invariantSeparatorsPath}")
 
       extensions.getByType(AndroidComponentsExtension::class.java).apply {
         onVariants { variant ->
-          configureVariant(variant, baseExtention)
+          configureVariant(variant, libraryExtension)
         }
       }
     }
@@ -53,17 +53,17 @@ class TreeSitterPlugin : Plugin<Project> {
 
   private fun Project.configureVariant(
     variant: Variant,
-    baseExtention: BaseExtension
+    libraryExtension: LibraryExtension
   ) {
     val variantName = variant.name.replaceFirstChar { name ->
       if (name.isLowerCase()) name.titlecase(Locale.ROOT) else name.toString()
     }
-    configureGenNativeHeadersTask(variantName, baseExtention, variant)
+    configureGenNativeHeadersTask(variantName, libraryExtension, variant)
   }
 
   @Suppress("UnstableApiUsage")
   private fun Project.configureGenNativeHeadersTask(variantName: String,
-                                                    baseExtention: BaseExtension,
+                                                    libraryExtension: LibraryExtension,
                                                     variant: Variant
   ) {
 
@@ -71,10 +71,10 @@ class TreeSitterPlugin : Plugin<Project> {
       tasks.register("generateNativeHeaders$variantName",
         GenerateNativeHeadersTask::class.java) {
 
-        val javaSrc = baseExtention.sourceSets.getByName("main").java
-        srcFiles = javaSrc.getSourceFiles()
+        val javaSrcDirs = libraryExtension.sourceSets.getByName("main").java.directories.map { project.file(it) }
+        srcFiles = project.files(javaSrcDirs).asFileTree
         classPath = variant.compileClasspath
-        srcDirs.set(javaSrc.srcDirs)
+        srcDirs.set(javaSrcDirs)
         outputDirectory.set(
           project.layout.buildDirectory.dir("generated/native_headers"))
       }

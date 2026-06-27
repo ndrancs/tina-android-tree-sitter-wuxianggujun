@@ -21,7 +21,7 @@ plugins {
 }
 
 dependencies {
-  implementation(projects.annotations)
+  implementation(project.dependencies.project(":annotations"))
   implementation(libs.javapoet)
 
   implementation(libs.google.auto.service.annotations)

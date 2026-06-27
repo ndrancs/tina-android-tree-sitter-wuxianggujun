@@ -55,8 +55,6 @@ plugins {
     id("android-tree-sitter.dynamic-modules")
 }
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
 // Check if this is a valid Git repository (not a submodule with .git file)
 // When included as a submodule, .git is a file pointing to parent's .git/modules/...
 def gitDir = file(".git")

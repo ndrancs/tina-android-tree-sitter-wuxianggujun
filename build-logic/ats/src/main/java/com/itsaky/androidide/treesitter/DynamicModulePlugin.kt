@@ -260,8 +260,8 @@ plugins {
 }
 
 dependencies {
-  implementation(projects.annotations)
-  annotationProcessor(projects.annotationProcessors)
+  implementation(project.dependencies.project(":annotations"))
+  annotationProcessor(project.dependencies.project(":annotation-processors"))
 }
 """.trimIndent()
 

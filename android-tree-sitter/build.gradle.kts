@@ -54,16 +54,16 @@ android {
 }
 
 dependencies {
-  implementation(projects.annotations)
-  annotationProcessor(projects.annotationProcessors)
+  implementation(project.dependencies.project(":annotations"))
+  annotationProcessor(project.dependencies.project(":annotation-processors"))
 
-  testImplementation(projects.treeSitterAidl)
-  testImplementation(projects.treeSitterJava)
-  testImplementation(projects.treeSitterJson)
-  testImplementation(projects.treeSitterKotlin)
-  testImplementation(projects.treeSitterLog)
-  testImplementation(projects.treeSitterXml)
-  testImplementation(projects.treeSitterPython)
+  testImplementation(project.dependencies.project(":tree-sitter-aidl"))
+  testImplementation(project.dependencies.project(":tree-sitter-java"))
+  testImplementation(project.dependencies.project(":tree-sitter-json"))
+  testImplementation(project.dependencies.project(":tree-sitter-kotlin"))
+  testImplementation(project.dependencies.project(":tree-sitter-log"))
+  testImplementation(project.dependencies.project(":tree-sitter-xml"))
+  testImplementation(project.dependencies.project(":tree-sitter-python"))
   testImplementation(libs.tests.google.truth)
   testImplementation(libs.tests.junit)
   testImplementation(libs.tests.robolectric)
