@@ -27,15 +27,9 @@ import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import java.io.File
 
-buildscript {
-  dependencies {
-    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
-  }
-}
-
 @Suppress("DSL_SCOPE_VIOLATION") plugins {
   id("build-logic.root-project")
-  alias(libs.plugins.kotlin) apply false
+  id("org.jetbrains.kotlin.android") apply false
   alias(libs.plugins.maven.publish) apply false
 }
 

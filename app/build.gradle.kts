@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.android.build.api.dsl.ApplicationExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 /*
  *  This file is part of android-tree-sitter.
@@ -18,10 +19,12 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
  */
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
 }
 
-android {
+val androidExtension = extensions.getByType(ApplicationExtension::class.java)
+
+androidExtension.apply {
     namespace = "com.itsaky.androidide.androidtreesitter"
     compileSdk = 33
 
@@ -57,9 +60,9 @@ android {
     }
 }
 
-tasks.withType(KotlinCompile::class.java) {
-    kotlinOptions {
-        jvmTarget = "11"
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }
 
