@@ -17,7 +17,8 @@
 
 @file:Suppress("UnstableApiUsage")
 
-import com.android.build.gradle.BaseExtension
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
 import com.itsaky.androidide.treesitter.BuildTreeSitterTask
 import com.itsaky.androidide.treesitter.CleanTreeSitterBuildTask
 import com.itsaky.androidide.treesitter.projectVersionCode
@@ -56,13 +57,6 @@ val buildAllAbiRequested =
   parseBooleanGradleProperty("tina.allAbi", default = false) ||
     (System.getenv("CI")?.equals("true", ignoreCase = true) == true) ||
     requestedTaskNames.any { it.contains("AllAbi", ignoreCase = true) }
-val localReleaseLikeTaskRequested =
-  buildAllAbiRequested ||
-    requestedTaskNames.any {
-      it.contains("release", ignoreCase = true) ||
-        it.contains("publish", ignoreCase = true) ||
-        it.contains("sign", ignoreCase = true)
-    }
 val configuredNativeAbis =
   if (buildAllAbiRequested) {
     listOf("arm64-v8a", "x86_64", "armeabi-v7a", "x86")
@@ -70,19 +64,9 @@ val configuredNativeAbis =
     listOf(devAbiMapping.getValue(localDevAbi))
   }
 
-fun Project.configureBaseExtension() {
-  extensions.configure<BaseExtension> {
-    compileSdkVersion(34)
-
-    variantFilter {
-      if (
-        !localReleaseLikeTaskRequested &&
-        !project.pluginManager.hasPlugin("com.vanniktech.maven.publish.base") &&
-        buildType.name == "release"
-      ) {
-        ignore = true
-      }
-    }
+fun Project.configureApplicationExtension() {
+  extensions.configure<ApplicationExtension> {
+    compileSdk = 34
 
     defaultConfig {
       minSdk = 21
@@ -106,19 +90,54 @@ fun Project.configureBaseExtension() {
       getByName("release") {
         isMinifyEnabled = false
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),
-          "proguard-rules.pro")
+        "proguard-rules.pro")
+      }
+    }
+  }
+
+  configureAndroidDependencies()
+}
+
+fun Project.configureLibraryExtension() {
+  extensions.configure<LibraryExtension> {
+    compileSdk = 34
+
+    defaultConfig {
+      minSdk = 21
+
+      ndk {
+        abiFilters += configuredNativeAbis
       }
     }
 
-    configurations.getByName("coreLibraryDesugaring").dependencies.add(
-      libs.common.coreLibDesugaring.get())
+    compileOptions {
+      sourceCompatibility = BuildConfig.JAVA_VERSION
+      targetCompatibility = BuildConfig.JAVA_VERSION
+
+      isCoreLibraryDesugaringEnabled = true
+    }
+
+    buildTypes {
+      getByName("release") {
+        isMinifyEnabled = false
+        proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),
+          "proguard-rules.pro")
+      }
+    }
   }
+
+  configureAndroidDependencies()
+}
+
+fun Project.configureAndroidDependencies() {
+  configurations.getByName("coreLibraryDesugaring").dependencies.add(
+    libs.common.coreLibDesugaring.get())
 }
 
 subprojects {
-  plugins.withId("com.android.application") { configureBaseExtension() }
+  plugins.withId("com.android.application") { configureApplicationExtension() }
   plugins.withId("com.android.library") {
-    configureBaseExtension()
+    configureLibraryExtension()
   }
   plugins.withId("java-library") {
     tasks.withType(JavaCompile::class.java) {
@@ -205,7 +224,7 @@ tasks.register<Delete>("clean").configure {
 }
 
 fun Project.configureTsModule() {
-  extensions.configure<BaseExtension> {
+  extensions.configure<LibraryExtension> {
     val grammarName = project.project.name.substringAfter("tree-sitter-", "")
     if (grammarName.isNotBlank()) {
       namespace = "com.itsaky.androidide.treesitter.$grammarName"
