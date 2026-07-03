@@ -42,7 +42,14 @@ gradlePlugin {
     }
 }
 
+val preferOfficialRepositories = System.getenv("CI") == "true"
+
 repositories {
+    if (preferOfficialRepositories) {
+        google()
+        gradlePluginPortal()
+        mavenCentral()
+    }
     maven("https://maven.aliyun.com/repository/google") {
         name = "AliyunGoogleMirror"
         content {
@@ -57,9 +64,11 @@ repositories {
     maven("https://maven.aliyun.com/repository/gradle-plugin") {
         name = "AliyunGradlePluginMirror"
     }
-    google()
-    gradlePluginPortal()
-    mavenCentral()
+    if (!preferOfficialRepositories) {
+        google()
+        gradlePluginPortal()
+        mavenCentral()
+    }
 }
 
 java {
